@@ -11,38 +11,6 @@
 5. 选择餐厅后生成模拟三点路线；
 6. 保存个人用餐记录。
 
-## Windows 运行方法
-
-打开 VS Code，选择“文件 → 打开文件夹”，打开：
-
-```text
-E:\route-meal
-```
-
-然后打开 VS Code 终端，运行：
-
-```powershell
-python run.py
-```
-
-如果 `python` 命令不可用，尝试：
-
-```powershell
-py run.py
-```
-
-## 自动测试
-
-```powershell
-python -m unittest discover -s tests -v
-```
-
-## 示例输入
-
-```text
-家常菜，辣一点，50元以内，一个人吃，最多绕路10分钟
-```
-
 ## 当前限制
 
 - 餐厅、评分、价格和绕路时间均为模拟数据；
