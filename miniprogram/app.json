@@ -1,0 +1,14 @@
+{
+  "pages": [
+    "pages/index/index"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#fff7ed",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "顺路去哪吃",
+    "backgroundColor": "#fffaf5"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

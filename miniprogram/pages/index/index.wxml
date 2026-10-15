@@ -1,0 +1,197 @@
+<view class="page">
+  <view class="hero">
+    <text class="hero-title">今天顺路吃什么？</text>
+    <text class="hero-subtitle">输入通勤路线，找一家最多绕路10分钟的餐厅</text>
+  </view>
+
+  <view class="card">
+    <text class="section-title">今天从哪里出发？</text>
+
+    <view class="location-row">
+      <view class="location-dot start-dot"></view>
+      <input
+        class="location-input"
+        placeholder="请输入起点，例如：公司"
+        value="{{start}}"
+        bindinput="onStartInput"
+      />
+    </view>
+
+    <view class="route-line"></view>
+
+    <view class="location-row">
+      <view class="location-dot end-dot"></view>
+      <input
+        class="location-input"
+        placeholder="请输入终点，例如：家"
+        value="{{destination}}"
+        bindinput="onDestinationInput"
+      />
+    </view>
+  </view>
+
+  <view class="card">
+    <text class="section-title">选择出行方式</text>
+
+    <view class="travel-options">
+      <view
+        class="travel-item {{travelMode === '公交' ? 'active' : ''}}"
+        data-mode="公交"
+        bindtap="selectTravelMode"
+      >
+        公交
+      </view>
+
+      <view
+        class="travel-item {{travelMode === '骑行' ? 'active' : ''}}"
+        data-mode="骑行"
+        bindtap="selectTravelMode"
+      >
+        骑行
+      </view>
+
+      <view
+        class="travel-item {{travelMode === '步行' ? 'active' : ''}}"
+        data-mode="步行"
+        bindtap="selectTravelMode"
+      >
+        步行
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <text class="section-title">今天想吃什么？</text>
+
+    <textarea
+      class="intent-input"
+      placeholder="例如：想吃家常菜，辣一点，50元以内"
+      maxlength="100"
+      value="{{intentText}}"
+      bindinput="onIntentInput"
+    ></textarea>
+  </view>
+
+  <button
+  class="search-button"
+  bindtap="searchRestaurants"
+  loading="{{isLoading}}"
+  disabled="{{isLoading}}"
+  > 
+    {{isLoading ? "正在抽签..." : "抽签"}}
+  </button>
+
+  <view class="results-section" wx:if="{{restaurants.length > 0}}">
+  <view class="result-heading">
+    <text class="section-title result-title">本轮抽签结果</text>
+    <text class="candidate-count">
+      候选池共{{candidateCount}}家，本轮展示{{restaurants.length}}家
+    </text>
+  </view>
+
+  <view
+    class="restaurant-card"
+    wx:for="{{restaurants}}"
+    wx:key="id"
+  >
+    <view class="restaurant-top">
+      <view class="restaurant-label">
+        {{index === 0 ? "A" : "B"}}
+      </view>
+
+      <view class="restaurant-main">
+        <text class="restaurant-name">{{item.name}}</text>
+        <text class="restaurant-address">{{item.address}}</text>
+      </view>
+    </view>
+
+    <view class="restaurant-info">
+      <text>评分 {{item.rating}}</text>
+      <text>人均 {{item.average_price}} 元</text>
+      <text>绕路 {{item.detour_minutes}} 分钟</text>
+    </view>
+
+    <view class="tag-list">
+      <text
+        class="tag"
+        wx:for="{{item.cuisine}}"
+        wx:for-item="tag"
+        wx:key="*this"
+      >
+        {{tag}}
+      </text>
+    </view>
+
+    <view class="reason-box">
+      <text class="reason-label">推荐理由</text>
+      <text class="reason-text">{{item.reason}}</text>
+      <button
+        class="choose-button"
+        data-id="{{item.id}}"
+        bindtap="chooseRestaurant"
+        loading="{{isRouteLoading && selectedRestaurantId === item.id}}"
+        disabled="{{isRouteLoading}}"
+      >
+        {{isRouteLoading && selectedRestaurantId === item.id ? "正在更新路线..." : "就选这家"}}
+      </button>
+    </view>
+  </view>
+  <button
+    class="redraw-button"
+    bindtap="redrawRestaurants"
+    disabled="{{isLoading || isRouteLoading}}"
+  >
+    都不喜欢，再抽一次
+  </button>
+  </view>
+
+  <text class="footer-tip">
+    第一版使用模拟路线和餐厅数据
+  </text>
+</view>
+
+<view class="route-card" wx:if="{{routePreview}}">
+  <text class="route-title">新路线已生成</text>
+
+  <view class="route-points">
+    <view class="route-point">
+      <view class="route-point-dot start-dot"></view>
+      <view>
+        <text class="route-point-label">起点</text>
+        <text class="route-point-name">{{routePreview.start}}</text>
+      </view>
+    </view>
+
+    <view class="route-vertical-line"></view>
+
+    <view class="route-point">
+      <view class="route-point-dot restaurant-dot"></view>
+      <view>
+        <text class="route-point-label">途经餐厅</text>
+        <text class="route-point-name">
+          {{routePreview.restaurant.name}}
+        </text>
+        <text class="route-point-address">
+          {{routePreview.restaurant.address}}
+        </text>
+      </view>
+    </view>
+
+    <view class="route-vertical-line"></view>
+
+    <view class="route-point">
+      <view class="route-point-dot end-dot"></view>
+      <view>
+        <text class="route-point-label">终点</text>
+        <text class="route-point-name">{{routePreview.destination}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="route-summary">
+    <text>{{routePreview.route_text}}</text>
+    <text class="detour-text">
+      预计增加 {{routePreview.detour_minutes}} 分钟
+    </text>
+  </view>
+</view>
