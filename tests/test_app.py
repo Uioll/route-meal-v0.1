@@ -3,11 +3,16 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from fastapi.testclient import TestClient
+from route_meal.api import app
 from route_meal.data import RESTAURANTS
 from route_meal.models import VisitRecord
 from route_meal.parser import parse_intent
 from route_meal.service import draw_two, filter_restaurants
 from route_meal.storage import VisitHistory
+
+
+client = TestClient(app)
 
 
 class IntentParserTests(unittest.TestCase):
@@ -56,3 +61,29 @@ class StorageTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+client = TestClient(app)
+
+
+def test_health():
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "ok"
+
+
+def test_parse_intent():
+    response = client.post(
+        "/intent/parse",
+        json={
+            "text": "我今天想吃家常菜，辣一点，50元以内",
+        },
+    )
+
+    assert response.status_code == 200
+
+    result = response.json()
+    # print(result)
+
+    assert result["success"] is True
+    assert result["intent"]["budget_max"] == 50
