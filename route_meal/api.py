@@ -1,6 +1,6 @@
 from typing import Literal
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from .data import RESTAURANTS
@@ -9,6 +9,7 @@ from .service import (
     draw_two,
     filter_restaurants,
     recommendation_reason,
+    simulated_route,
 )
 
 
@@ -45,6 +46,28 @@ class RestaurantFilterRequest(BaseModel):
         description="本次抽签中已经拒绝的餐厅ID",
     )
 
+class RoutePreviewRequest(BaseModel):
+    start: str = Field(
+        min_length=1,
+        max_length=100,
+        description="出发地点",
+    )
+
+    destination: str = Field(
+        min_length=1,
+        max_length=100,
+        description="最终目的地",
+    )
+
+    restaurant_id: int = Field(
+        gt=0,
+        description="用户选中的餐厅ID",
+    )
+
+    travel_mode: Literal["公交", "骑行", "步行"] = Field(
+        default="公交",
+        description="保持不变的出行方式",
+    )
 
 @app.get("/")
 def root():
@@ -161,4 +184,45 @@ def draw_restaurant_lottery(request: RestaurantFilterRequest):
         "travel_mode": request.travel_mode,
         "rejected_ids": request.rejected_ids,
         "restaurants": lottery_results,
+    }
+
+@app.post("/route/preview")
+def preview_route(request: RoutePreviewRequest):
+    selected_restaurant = next(
+        (
+            restaurant
+            for restaurant in RESTAURANTS
+            if restaurant.id == request.restaurant_id
+        ),
+        None,
+    )
+
+    if selected_restaurant is None:
+        raise HTTPException(
+            status_code=404,
+            detail="没有找到对应的餐厅",
+        )
+
+    route_text = simulated_route(
+        start=request.start,
+        restaurant=selected_restaurant,
+        destination=request.destination,
+        travel_mode=request.travel_mode,
+    )
+
+    return {
+        "success": True,
+        "route_type": "simulated",
+        "start": request.start,
+        "restaurant": {
+            "id": selected_restaurant.id,
+            "name": selected_restaurant.name,
+            "address": selected_restaurant.address,
+        },
+        "destination": request.destination,
+        "travel_mode": request.travel_mode,
+        "detour_minutes": selected_restaurant.detour_minutes[
+            request.travel_mode
+        ],
+        "route_text": route_text,
     }
