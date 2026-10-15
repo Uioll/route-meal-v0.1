@@ -133,3 +133,34 @@ page {
   font-size: 24rpx;
   text-align: right;
 }
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 22rpx;
+}
+
+.visit-time {
+  margin-top: 0;
+  text-align: left;
+}
+
+.delete-button {
+  margin: 0;
+  padding: 0 20rpx;
+  color: #c24f3b;
+  font-size: 24rpx;
+  line-height: 54rpx;
+  background: #fff0ec;
+  border-radius: 999rpx;
+}
+
+.delete-button::after {
+  border: none;
+}
+
+.delete-button[disabled] {
+  color: #aaa09a;
+  background: #f5f1ee;
+}

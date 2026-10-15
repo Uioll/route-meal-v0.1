@@ -53,10 +53,73 @@ class StorageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             path = Path(temp_dir) / "history.json"
             storage = VisitHistory(path)
-            storage.append(VisitRecord(1, "测试餐厅", "2026-10-14T17:00:00", 5, "不错", True))
+
+            storage.append(
+                VisitRecord(
+                    1,
+                    "Test Restaurant",
+                    "2026-10-14T17:00:00",
+                    5,
+                    "Good",
+                    True,
+                )
+            )
+
             history = storage.load()
+
             self.assertEqual(len(history), 1)
-            self.assertEqual(history[0]["restaurant_name"], "测试餐厅")
+            self.assertEqual(
+                history[0]["restaurant_name"],
+                "Test Restaurant",
+            )
+
+    def test_visit_record_can_be_deleted(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "history.json"
+            storage = VisitHistory(path)
+
+            storage.append(
+                VisitRecord(
+                    1,
+                    "First Restaurant",
+                    "2026-10-14T17:00:00",
+                    4.5,
+                    "Good",
+                    True,
+                )
+            )
+
+            storage.append(
+                VisitRecord(
+                    2,
+                    "Second Restaurant",
+                    "2026-10-15T18:00:00",
+                    3.0,
+                    "Average",
+                    False,
+                )
+            )
+
+            deleted_record = storage.delete(0)
+            remaining_history = storage.load()
+
+            self.assertEqual(
+                deleted_record["restaurant_name"],
+                "First Restaurant",
+            )
+            self.assertEqual(len(remaining_history), 1)
+            self.assertEqual(
+                remaining_history[0]["restaurant_name"],
+                "Second Restaurant",
+            )
+
+    def test_delete_rejects_unknown_record(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "history.json"
+            storage = VisitHistory(path)
+
+            with self.assertRaises(IndexError):
+                storage.delete(99)
 
 
 if __name__ == "__main__":

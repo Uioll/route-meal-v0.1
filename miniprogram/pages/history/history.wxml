@@ -52,8 +52,21 @@
       <view wx:else class="comment-box empty-comment">
         没有填写评价
       </view>
+      <view class="card-footer">
+        <text class="visit-time">{{item.display_time}}</text>
 
-      <text class="visit-time">{{item.display_time}}</text>
+        <button
+          class="delete-button"
+          size="mini"
+          data-record-id="{{item.record_id}}"
+          data-restaurant-name="{{item.restaurant_name}}"
+          bindtap="deleteVisit"
+          loading="{{deletingRecordId === item.record_id}}"
+          disabled="{{deletingRecordId !== null}}"
+        >
+          删除记录
+        </button>
+      </view>
     </view>
   </view>
 </view>

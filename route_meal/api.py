@@ -301,8 +301,33 @@ def create_visit(request: VisitCreateRequest):
 def get_visits():
     history = VisitHistory().load()
 
+    visits = [
+        {
+            **record,
+            "record_id": index,
+        }
+        for index, record in enumerate(history)
+    ]
+
     return {
         "success": True,
-        "visit_count": len(history),
-        "visits": history,
+        "visit_count": len(visits),
+        "visits": visits,
+    }
+
+
+@app.delete("/visits/{record_id}")
+def delete_visit(record_id: int):
+    try:
+        deleted_record = VisitHistory().delete(record_id)
+    except IndexError as error:
+        raise HTTPException(
+            status_code=404,
+            detail="用餐记录不存在",
+        ) from error
+
+    return {
+        "success": True,
+        "message": "用餐记录删除成功",
+        "deleted_visit": deleted_record,
     }
