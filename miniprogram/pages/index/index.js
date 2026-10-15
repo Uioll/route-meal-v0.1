@@ -2,23 +2,16 @@ Page({
   data: {
     start: "",
     destination: "",
+    startLocation: null,
+    destinationLocation: null,  
     travelMode: "公交",
+    directRoute: null,
+    isDirectRouteLoading: false,
     intentText: "",
     submitted: false,
     isLoading: false,
     candidateCount: 0,
     restaurants: [],
-    isRouteLoading: false,
-    selectedRestaurantId: null,
-    routePreview: null,
-    rejectedIds: [],
-    visitFormVisible: false,
-    personalRating: "",
-    visitComment: "",
-    willingToReturn: true,
-    isSavingVisit: false,
-    savedVisit: null,
-    isSaving: false,
   },
 
   onStartInput(event) {
@@ -27,21 +20,89 @@ Page({
       submitted: false,
       candidateCount: 0,
       restaurants: [],
-      routePreview: null,
-      rejectedIds: []
+      rejectedIds: [],
+      startLocation: null,
+      directRoute: null,
     })
   },
 
   onDestinationInput(event) {
     this.setData({
       destination: event.detail.value,
+      destinationLocation: null,
       submitted: false,
       candidateCount: 0,
       restaurants: [],
-      routePreview: null,
-      rejectedIds: []
+      rejectedIds: [],
+      DestinationLocation: null,
+      directRoute: null,
     })
   },
+
+chooseStartLocation() {
+  this.chooseLocation("start")
+},
+
+chooseDestinationLocation() {
+  this.chooseLocation("destination")
+},
+
+chooseLocation(locationType) {
+  wx.chooseLocation({
+    success: (location) => {
+      const locationName =
+        location.name || location.address || "已选择的位置"
+
+      const selectedLocation = {
+        name: locationName,
+        address: location.address || "",
+        latitude: location.latitude,
+        longitude: location.longitude
+      }
+
+      const resetData = {
+        submitted: false,
+        candidateCount: 0,
+        restaurants: [],
+        rejectedIds: []
+      }
+
+      if (locationType === "start") {
+        this.setData(
+          Object.assign({}, resetData, {
+            start: locationName,
+            startLocation: selectedLocation,
+            directRoute: null
+          })
+        )
+      } else {
+        this.setData(
+          Object.assign({}, resetData, {
+            destination: locationName,
+            destinationLocation: selectedLocation,
+            directRoute: null
+          })
+        )
+      }
+    },
+
+    fail: (error) => {
+      console.error("地图选点失败：", error)
+
+      if (
+        error.errMsg &&
+        error.errMsg.includes("cancel")
+      ) {
+        return
+      }
+
+      wx.showToast({
+        title: "暂时无法打开地图",
+        icon: "none"
+      })
+    }
+  })
+},
 
   onIntentInput(event) {
     this.setData({
@@ -49,19 +110,160 @@ Page({
       submitted: false,
       candidateCount: 0,
       restaurants: [],
-      routePreview: null,
       rejectedIds: []
     })
   },
 
   selectTravelMode(event) {
+    wx.removeStorageSync(
+      "selectedCommuteRoute"
+    )
+  
     this.setData({
-      travelMode: event.currentTarget.dataset.mode,
+      travelMode:
+        event.currentTarget.dataset.mode,
       submitted: false,
       candidateCount: 0,
       restaurants: [],
-      routePreview: null,
-      rejectedIds: []
+      rejectedIds: [],
+      directRoute: null
+    })
+  },
+
+  openRouteSelection() {
+    const {
+      start,
+      destination,
+      startLocation,
+      destinationLocation,
+      travelMode
+    } = this.data
+  
+    if (!startLocation) {
+      wx.showToast({
+        title: "请通过地图选择起点",
+        icon: "none"
+      })
+      return
+    }
+  
+    if (!destinationLocation) {
+      wx.showToast({
+        title: "请通过地图选择终点",
+        icon: "none"
+      })
+      return
+    }
+  
+    wx.setStorageSync(
+      "routeDraft",
+      {
+        start,
+        destination,
+        startLocation,
+        destinationLocation,
+        travelMode
+      }
+    )
+  
+    wx.navigateTo({
+      url: "/pages/routes/routes"
+    })
+  },
+
+  formatRouteDuration(minutes) {
+    const totalMinutes = Number(minutes) || 0
+  
+    if (totalMinutes < 60) {
+      return `${totalMinutes}分钟`
+    }
+  
+    const hours = Math.floor(totalMinutes / 60)
+    const remainingMinutes = totalMinutes % 60
+  
+    if (remainingMinutes === 0) {
+      return `${hours}小时`
+    }
+  
+    return `${hours}小时${remainingMinutes}分钟`
+  },
+  
+  loadDirectRoute() {
+    const {
+      startLocation,
+      destinationLocation,
+      travelMode
+    } = this.data
+  
+    if (!startLocation || !destinationLocation) {
+      return
+    }
+  
+    this.setData({
+      isDirectRouteLoading: true,
+      directRoute: null
+    })
+  
+    wx.request({
+      url: "http://127.0.0.1:8000/map/direct-route",
+      method: "POST",
+  
+      data: {
+        start_location: startLocation,
+        destination_location: destinationLocation,
+        travel_mode: travelMode
+      },
+  
+      success: (response) => {
+        if (
+          response.statusCode !== 200 ||
+          !response.data ||
+          response.data.success !== true
+        ) {
+          wx.showToast({
+            title: "路线计算失败",
+            icon: "none"
+          })
+          return
+        }
+  
+        const distance =
+          Number(response.data.distance_meters) || 0
+  
+        const distanceText = distance < 1000
+          ? `${distance}米`
+          : `${(distance / 1000).toFixed(1)}公里`
+  
+        const directRoute = Object.assign(
+          {},
+          response.data,
+          {
+            distance_text: distanceText,
+            duration_text: this.formatRouteDuration(
+              response.data.duration_minutes
+            )
+          }
+        )
+  
+        this.setData({
+          directRoute
+        })
+      },
+  
+      fail: (error) => {
+        console.error("真实路线请求失败：", error)
+  
+        wx.showToast({
+          title: "无法连接路线服务",
+          icon: "none"
+        })
+      },
+  
+      complete: () => {
+        this.setData({
+          isDirectRouteLoading: false
+        })
+      }
     })
   },
 
@@ -70,9 +272,11 @@ Page({
       start,
       destination,
       intentText,
-      travelMode
+      travelMode,
+      startLocation,
+      destinationLocation
     } = this.data
-
+  
     if (!start.trim()) {
       wx.showToast({
         title: "请填写起点",
@@ -80,7 +284,7 @@ Page({
       })
       return
     }
-
+  
     if (!destination.trim()) {
       wx.showToast({
         title: "请填写终点",
@@ -88,7 +292,46 @@ Page({
       })
       return
     }
-
+  
+    if (!startLocation || !destinationLocation) {
+      wx.showToast({
+        title: "请通过地图选择起点和终点",
+        icon: "none"
+      })
+      return
+    }
+  
+    const selectedCommuteRoute =
+      wx.getStorageSync(
+        "selectedCommuteRoute"
+      )
+  
+    if (
+      !selectedCommuteRoute ||
+      !selectedCommuteRoute.route
+    ) {
+      wx.showToast({
+        title: "请先确认一条通勤路线",
+        icon: "none"
+      })
+      return
+    }
+  
+    if (
+      selectedCommuteRoute.start !== start ||
+      selectedCommuteRoute.destination !==
+        destination ||
+      selectedCommuteRoute.travelMode !==
+        travelMode
+    ) {
+      wx.showToast({
+        title: "地点或出行方式已变化，请重新选择路线",
+        icon: "none",
+        duration: 2500
+      })
+      return
+    }
+  
     if (!intentText.trim()) {
       wx.showToast({
         title: "请填写想吃什么",
@@ -96,7 +339,7 @@ Page({
       })
       return
     }
-
+  
     this.setData({
       isLoading: true,
       submitted: false,
@@ -104,40 +347,72 @@ Page({
       restaurants: [],
       routePreview: null
     })
-
+  
     wx.request({
       url: "http://127.0.0.1:8000/lottery/draw",
       method: "POST",
-
+  
       header: {
         "content-type": "application/json"
       },
-
+  
       data: {
         text: intentText,
         travel_mode: travelMode,
-        rejected_ids: this.data.rejectedIds
+        rejected_ids:
+          this.data.rejectedIds,
+        start_location: startLocation,
+        destination_location:
+          destinationLocation
       },
-
+  
       success: (response) => {
         if (
           response.statusCode === 200 &&
+          response.data &&
           response.data.success === true
         ) {
-          this.setData({
-            submitted: true,
-            candidateCount: response.data.candidate_count,
-            restaurants: response.data.restaurants
-          })
-
-          wx.showToast({
-            title: "抽签完成",
-            icon: "success"
+          const restaurants =
+            response.data.restaurants || []
+  
+          if (restaurants.length === 0) {
+            wx.showToast({
+              title: "没有找到符合条件的餐厅",
+              icon: "none"
+            })
+            return
+          }
+  
+          const lotterySession = {
+            start,
+            destination,
+            intentText,
+            travelMode,
+            startLocation,
+            destinationLocation,
+            selectedCommuteRoute,
+            candidateCount:
+              response.data.candidate_count,
+            restaurants,
+            rejectedIds:
+              this.data.rejectedIds
+          }
+  
+          wx.setStorageSync(
+            "lotterySession",
+            lotterySession
+          )
+  
+          wx.navigateTo({
+            url: "/pages/lottery/lottery"
           })
         } else {
           const message =
-            response.data.detail || "没有找到符合条件的餐厅"
-
+            response.data &&
+            response.data.detail
+              ? response.data.detail
+              : "没有找到符合条件的餐厅"
+  
           wx.showToast({
             title: message,
             icon: "none",
@@ -145,16 +420,19 @@ Page({
           })
         }
       },
-
+  
       fail: (error) => {
-        console.error("抽签请求失败：", error)
-
+        console.error(
+          "抽签请求失败：",
+          error
+        )
+  
         wx.showToast({
           title: "无法连接后端",
           icon: "none"
         })
       },
-
+  
       complete: () => {
         this.setData({
           isLoading: false
@@ -163,224 +441,4 @@ Page({
     })
   },
 
-  redrawRestaurants() {
-    const displayedIds = this.data.restaurants.map(
-      restaurant => restaurant.id
-    )
-  
-    const rejectedIds = [
-      ...this.data.rejectedIds,
-      ...displayedIds
-    ]
-  
-    this.setData({
-      rejectedIds: rejectedIds,
-      restaurants: [],
-      candidateCount: 0,
-      routePreview: null,
-      selectedRestaurantId: null
-    }, () => {
-      this.searchRestaurants()
-    })
-  },
-
-
-  chooseRestaurant(event) {
-    const restaurantId = Number(event.currentTarget.dataset.id)
-
-    this.setData({
-      isRouteLoading: true,
-      selectedRestaurantId: restaurantId,
-      routePreview: null
-    })
-
-    wx.request({
-      url: "http://127.0.0.1:8000/route/preview",
-      method: "POST",
-
-      header: {
-        "content-type": "application/json"
-      },
-
-      data: {
-        start: this.data.start,
-        destination: this.data.destination,
-        restaurant_id: restaurantId,
-        travel_mode: this.data.travelMode
-      },
-
-      success: (response) => {
-        if (
-          response.statusCode === 200 &&
-          response.data.success === true
-        ) {
-          this.setData({
-            routePreview: response.data
-          })
-
-          wx.showToast({
-            title: "新路线已生成",
-            icon: "success"
-          })
-        } else {
-          const message =
-            response.data.detail || "生成路线失败"
-
-          wx.showToast({
-            title: message,
-            icon: "none"
-          })
-        }
-      },
-
-      fail: (error) => {
-        console.error("路线请求失败：", error)
-
-        wx.showToast({
-          title: "无法生成路线",
-          icon: "none"
-        })
-      },
-
-      complete: () => {
-        this.setData({
-          isRouteLoading: false
-        })
-      }
-    })
-  },
-  showVisitForm() {
-    this.setData({
-      visitFormVisible: true,
-      personalRating: "",
-      visitComment: "",
-      willingToReturn: true
-    })
-  },
-  
-  onRatingInput(event) {
-    this.setData({
-      personalRating: event.detail.value
-    })
-  },
-  
-  onCommentInput(event) {
-    this.setData({
-      visitComment: event.detail.value
-    })
-  },
-  
-  selectReturnChoice(event) {
-    this.setData({
-      willingToReturn: event.currentTarget.dataset.value === "true"
-    })
-  },
-  
-  saveVisit() {
-    if (this.data.isSaving) {
-      return
-    }
-    const ratingText = String(this.data.personalRating).trim()
-    const rating = Number(ratingText)
-  
-    if (!ratingText || Number.isNaN(rating)) {
-      wx.showToast({
-        title: "请输入个人评分",
-        icon: "none"
-      })
-      return
-    }
-  
-    if (rating < 1 || rating > 5) {
-      wx.showToast({
-        title: "评分必须在1到5之间",
-        icon: "none"
-      })
-      return
-    }
-  
-    if (!/^[1-5](\.\d)?$/.test(ratingText)) {
-      wx.showToast({
-        title: "评分最多保留一位小数",
-        icon: "none"
-      })
-      return
-    }
-  
-    if (!this.data.routePreview) {
-      wx.showToast({
-        title: "请先选择餐厅",
-        icon: "none"
-      })
-      return
-    }
-  
-    this.setData({
-      isSavingVisit: true,      
-      isSaving: true
-    })
-  
-    wx.request({
-      url: "http://127.0.0.1:8000/visits",
-      method: "POST",
-  
-      header: {
-        "content-type": "application/json"
-      },
-  
-      data: {
-        restaurant_id: this.data.routePreview.restaurant.id,
-        personal_rating: rating,
-        comment: this.data.visitComment.trim(),
-        willing_to_return: this.data.willingToReturn
-      },
-      
-      success: (response) => {
-        console.log("保存接口返回：", response)
-        if (
-          response.statusCode === 200 &&
-          response.data.success === true
-        ) {
-          this.setData({
-            visitFormVisible: false,
-            savedVisit: response.data.visit
-          })
-  
-          wx.showToast({
-            title: "用餐记录已保存",
-            icon: "success"
-          })
-        } else {
-          const detail = response.data.detail
-          let message = "保存失败"
-  
-          if (typeof detail === "string") {
-            message = detail
-          }
-  
-          wx.showToast({
-            title: message,
-            icon: "none",
-            duration: 2500
-          })
-        }
-      },
-  
-      fail: (error) => {
-        console.error("保存用餐记录失败：", error)
-  
-        wx.showToast({
-          title: "无法连接后端",
-          icon: "none"
-        })
-      },
-  
-      complete: () => {
-        this.setData({
-          isSaving: false
-        })
-      }
-    })
-  },
-  
 })

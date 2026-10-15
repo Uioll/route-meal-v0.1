@@ -1,0 +1,165 @@
+page {
+  min-height: 100%;
+  background: #fff8f2;
+}
+
+.page {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 28rpx 28rpx 60rpx;
+}
+
+.result-heading {
+  margin-bottom: 24rpx;
+  padding: 8rpx;
+}
+
+.page-title {
+  display: block;
+  color: #2f2925;
+  font-size: 40rpx;
+  font-weight: 700;
+}
+
+.candidate-count {
+  display: block;
+  margin-top: 10rpx;
+  color: #99897d;
+  font-size: 25rpx;
+}
+
+.intent-summary {
+  display: block;
+  margin-top: 12rpx;
+  color: #ff7043;
+  font-size: 24rpx;
+}
+
+.restaurant-card {
+  margin-bottom: 28rpx;
+  padding: 34rpx;
+  border-radius: 28rpx;
+  background: #ffffff;
+  box-shadow: 0 10rpx 30rpx rgba(91, 61, 40, 0.08);
+}
+
+.restaurant-top {
+  display: flex;
+  align-items: center;
+}
+
+.restaurant-label {
+  display: flex;
+  width: 72rpx;
+  height: 72rpx;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  margin-right: 22rpx;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 34rpx;
+  font-weight: 700;
+  background: #ff7a45;
+}
+
+.restaurant-main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.restaurant-name {
+  color: #2f2925;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.restaurant-address {
+  margin-top: 8rpx;
+  color: #99897d;
+  font-size: 24rpx;
+}
+
+.restaurant-info {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 28rpx;
+  padding: 20rpx 0;
+  border-top: 1rpx solid #f0ebe7;
+  border-bottom: 1rpx solid #f0ebe7;
+  color: #65584f;
+  font-size: 26rpx;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 22rpx;
+}
+
+.tag {
+  margin: 0 12rpx 12rpx 0;
+  padding: 10rpx 16rpx;
+  border-radius: 14rpx;
+  color: #e4663d;
+  font-size: 23rpx;
+  background: #fff0e9;
+}
+
+.reason-box {
+  margin-top: 12rpx;
+  padding: 22rpx;
+  border-radius: 18rpx;
+  background: #fffaf5;
+}
+
+.reason-label {
+  display: block;
+  margin-bottom: 10rpx;
+  color: #ff7043;
+  font-size: 25rpx;
+  font-weight: 600;
+}
+
+.reason-text {
+  display: block;
+  color: #776b63;
+  font-size: 25rpx;
+  line-height: 1.7;
+}
+
+.choose-button {
+  margin-top: 24rpx;
+  border: 2rpx solid #ff7043;
+  border-radius: 42rpx;
+  color: #ff7043;
+  font-size: 28rpx;
+  font-weight: 600;
+  background: #ffffff;
+}
+
+.choose-button::after {
+  border: none;
+}
+
+.redraw-button {
+  color: #7a6b61;
+  font-size: 28rpx;
+  border: 2rpx solid #d8cec7;
+  border-radius: 44rpx;
+  background: transparent;
+}
+
+.redraw-button::after {
+  border: none;
+}
+
+.footer-tip {
+  display: block;
+  margin-top: 28rpx;
+  color: #b2a8a1;
+  font-size: 23rpx;
+  text-align: center;
+}

@@ -1,0 +1,84 @@
+<view class="page">
+  <view class="result-heading">
+    <text class="page-title">本轮抽签结果</text>
+
+    <text class="candidate-count">
+      候选池共{{candidateCount}}家，本轮展示{{restaurants.length}}家
+    </text>
+
+    <text class="intent-summary">
+      “{{intentText}}” · {{travelMode}}
+    </text>
+  </view>
+
+  <view
+    class="restaurant-card"
+    wx:for="{{restaurants}}"
+    wx:key="id"
+  >
+    <view class="restaurant-top">
+      <view class="restaurant-label">
+        {{index === 0 ? "A" : "B"}}
+      </view>
+
+      <view class="restaurant-main">
+        <text class="restaurant-name">
+          {{item.name}}
+        </text>
+
+        <text class="restaurant-address">
+          {{item.address}}
+        </text>
+      </view>
+    </view>
+
+    <view class="restaurant-info">
+      <text>评分 {{item.rating}}</text>
+      <text>人均 {{item.average_price}} 元</text>
+      <text>绕路 {{item.detour_minutes}} 分钟</text>
+    </view>
+
+    <view class="tag-list">
+      <text
+        class="tag"
+        wx:for="{{item.cuisine}}"
+        wx:for-item="tag"
+        wx:key="*this"
+      >
+        {{tag}}
+      </text>
+    </view>
+
+    <view class="reason-box">
+      <text class="reason-label">
+        推荐理由
+      </text>
+
+      <text class="reason-text">
+        {{item.reason}}
+      </text>
+
+      <button
+        class="choose-button"
+        data-id="{{item.id}}"
+        bindtap="chooseRestaurant"
+        disabled="{{isLoading}}"
+      >
+        就选这家
+      </button>
+    </view>
+  </view>
+
+  <button
+    class="redraw-button"
+    bindtap="redrawRestaurants"
+    loading="{{isLoading}}"
+    disabled="{{isLoading}}"
+  >
+    {{isLoading ? "正在重新抽签..." : "都不喜欢，再抽一次"}}
+  </button>
+
+  <text class="footer-tip">
+    选定餐厅后，将生成经过餐厅的新路线
+  </text>
+</view>

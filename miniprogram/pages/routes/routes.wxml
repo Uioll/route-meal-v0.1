@@ -1,0 +1,153 @@
+<view class="route-page">
+  <map
+    id="routeMap"
+    class="route-map"
+    longitude="{{mapLongitude}}"
+    latitude="{{mapLatitude}}"
+    scale="{{mapScale}}"
+    polyline="{{mapPolylines}}"
+    circles="{{mapCircles}}"
+    include-points="{{mapIncludePoints}}"
+    enable-zoom="{{true}}"
+    enable-scroll="{{true}}"
+    enable-rotate="{{false}}"
+    show-scale="{{true}}"
+  ></map>
+
+  <view class="location-panel">
+    <view class="location-item">
+      <view class="location-dot start-dot"></view>
+
+      <view class="location-content">
+        <text class="location-label">起点</text>
+        <text class="location-name">{{start}}</text>
+      </view>
+    </view>
+
+    <view class="location-divider"></view>
+
+    <view class="location-item">
+      <view class="location-dot end-dot"></view>
+
+      <view class="location-content">
+        <text class="location-label">终点</text>
+        <text class="location-name">{{destination}}</text>
+      </view>
+    </view>
+
+    <view class="travel-mode-badge">
+      {{travelMode}}
+    </view>
+  </view>
+
+  <view class="route-sheet">
+    <view class="sheet-handle"></view>
+
+    <view class="sheet-header">
+      <view>
+        <text class="sheet-title">选择一条通勤路线</text>
+        <text class="sheet-subtitle">
+          确认后再选择今天想吃什么
+        </text>
+      </view>
+
+      <text
+        wx:if="{{routes.length > 0}}"
+        class="route-count"
+      >
+        {{routes.length}} 条
+      </text>
+    </view>
+
+    <view
+      wx:if="{{isLoading}}"
+      class="state-box"
+    >
+      <view class="loading-circle"></view>
+      <text class="state-text">
+        正在规划{{travelMode}}路线…
+      </text>
+    </view>
+
+    <view
+      wx:elif="{{errorMessage}}"
+      class="state-box"
+    >
+      <text class="error-title">
+        路线加载失败
+      </text>
+
+      <text class="state-text">
+        {{errorMessage}}
+      </text>
+
+      <button
+        class="retry-button"
+        bindtap="retryLoadRoutes"
+      >
+        重新加载
+      </button>
+    </view>
+
+    <block wx:elif="{{routes.length > 0}}">
+      <scroll-view
+        class="route-scroll"
+        scroll-x="{{true}}"
+        enhanced="{{true}}"
+        show-scrollbar="{{false}}"
+      >
+        <view class="route-options">
+          <view
+            wx:for="{{routes}}"
+            wx:key="id"
+            class="route-option {{item.id === selectedRouteId ? 'selected' : ''}}"
+            data-route-id="{{item.id}}"
+            bindtap="selectRoute"
+          >
+            <view class="route-option-top">
+              <text class="route-duration">
+                {{item.displayDuration}}
+              </text>
+
+              <text
+                wx:if="{{item.id === selectedRouteId}}"
+                class="selected-badge"
+              >
+                已选择
+              </text>
+            </view>
+
+            <text class="route-distance">
+              {{item.displayDistance}}
+            </text>
+
+            <text class="route-summary">
+              {{item.summary}}
+            </text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view class="route-tip">
+        <view class="tip-line selected-line"></view>
+        <text>橙色为当前路线</text>
+
+        <view
+          wx:if="{{routes.length > 1}}"
+          class="tip-line normal-line"
+        ></view>
+
+        <text wx:if="{{routes.length > 1}}">
+          灰色为其他路线
+        </text>
+      </view>
+
+      <button
+        class="confirm-route-button"
+        bindtap="confirmSelectedRoute"
+      >
+        确认这条路线
+      </button>
+    </block>
+  </view>
+</view>

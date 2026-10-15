@@ -260,84 +260,6 @@ page {
   border: none;
 }
 
-.route-card {
-  margin-top: 32rpx;
-  padding: 36rpx;
-  background: #2f2925;
-  border-radius: 28rpx;
-  box-shadow: 0 14rpx 32rpx rgba(47, 41, 37, 0.18);
-}
-
-.route-title {
-  display: block;
-  margin-bottom: 32rpx;
-  color: #ffffff;
-  font-size: 34rpx;
-  font-weight: 700;
-}
-
-.route-point {
-  display: flex;
-  align-items: flex-start;
-}
-
-.route-point-dot {
-  width: 20rpx;
-  height: 20rpx;
-  margin-top: 10rpx;
-  margin-right: 24rpx;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.restaurant-dot {
-  background: #ffb347;
-}
-
-.route-vertical-line {
-  width: 4rpx;
-  height: 34rpx;
-  margin: 6rpx 0 6rpx 8rpx;
-  background: #6d625b;
-}
-
-.route-point-label {
-  display: block;
-  color: #aa9e96;
-  font-size: 23rpx;
-}
-
-.route-point-name {
-  display: block;
-  margin-top: 4rpx;
-  color: #ffffff;
-  font-size: 29rpx;
-  font-weight: 600;
-}
-
-.route-point-address {
-  display: block;
-  margin-top: 5rpx;
-  color: #c9bdb5;
-  font-size: 24rpx;
-}
-
-.route-summary {
-  margin-top: 30rpx;
-  padding: 24rpx;
-  color: #eee6e0;
-  font-size: 25rpx;
-  line-height: 1.7;
-  background: #3d3530;
-  border-radius: 18rpx;
-}
-
-.detour-text {
-  display: block;
-  margin-top: 10rpx;
-  color: #ffb07d;
-  font-weight: 600;
-}
 
 .redraw-button {
   margin-top: 8rpx;
@@ -351,96 +273,98 @@ page {
 .redraw-button::after {
   border: none;
 }
-.arrival-button {
-  margin-top: 26rpx;
-  color: #ffffff;
-  font-size: 28rpx;
-  font-weight: 600;
-  background: #ff7a45;
-  border-radius: 44rpx;
+
+
+.map-button {
+  flex-shrink: 0;
+  min-width: 126rpx;
+  margin: 0 0 0 14rpx;
+  padding: 0 18rpx;
+  color: #ff7043;
+  font-size: 24rpx;
+  line-height: 62rpx;
+  background: #fff0e9;
+  border-radius: 999rpx;
 }
 
-.arrival-button::after {
-  border: none;
-}
-
-.visit-form {
-  margin-top: 30rpx;
-}
-
-.form-label {
-  display: block;
-  margin: 26rpx 0 14rpx;
-  color: #65584f;
-  font-size: 27rpx;
-  font-weight: 600;
-}
-
-.form-input,
-.form-textarea {
-  width: 100%;
-  padding: 22rpx;
-  font-size: 28rpx;
-  background: #f8f5f2;
-  border-radius: 18rpx;
+.map-button {
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
+  min-width: 126rpx;
+  margin-left: 14rpx;
+  padding: 0 18rpx;
+  color: #ff7043;
+  font-size: 24rpx;
+  line-height: 62rpx;
+  text-align: center;
+  background: #fff0e9;
+  border-radius: 999rpx;
   box-sizing: border-box;
 }
 
-.form-textarea {
-  height: 150rpx;
-}
-
-.return-options {
-  display: flex;
-  gap: 20rpx;
-}
-
-.return-option {
+.location-input {
+  min-width: 0;
   flex: 1;
-  padding: 20rpx 0;
-  text-align: center;
-  color: #75675e;
-  background: #f7f3ef;
-  border-radius: 18rpx;
 }
 
-.return-option.active {
+.direct-route-card {
+  margin: 24rpx 28rpx;
+  padding: 30rpx;
   color: #ffffff;
-  font-weight: 600;
-  background: #ff7a45;
-}
-
-.save-visit-button {
-  margin-top: 32rpx;
-  color: #ffffff;
-  font-size: 29rpx;
-  background: #2f2925;
-  border-radius: 44rpx;
-}
-
-.save-visit-button::after {
-  border: none;
-}
-
-.saved-visit-card {
-  margin-top: 30rpx;
-  padding: 34rpx;
-  color: #ffffff;
-  background: #32a866;
+  background: #302824;
   border-radius: 28rpx;
-  box-shadow: 0 12rpx 28rpx rgba(50, 168, 102, 0.2);
+  box-sizing: border-box;
 }
 
-.saved-title {
-  display: block;
-  margin-bottom: 20rpx;
-  font-size: 32rpx;
+.direct-route-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.direct-route-title {
+  font-size: 34rpx;
   font-weight: 700;
 }
 
-.saved-line {
+.real-route-badge {
+  padding: 8rpx 16rpx;
+  color: #31b36b;
+  font-size: 22rpx;
+  background: rgba(49, 179, 107, 0.16);
+  border-radius: 999rpx;
+}
+
+.direct-route-points {
   display: block;
-  margin-top: 10rpx;
-  font-size: 26rpx;
-  line-height: 1.6;
+  margin-top: 22rpx;
+  color: #ded5d0;
+  font-size: 27rpx;
+  line-height: 1.5;
+}
+
+.direct-route-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-top: 28rpx;
+}
+
+.direct-route-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10rpx;
+}
+
+.stat-label {
+  color: #a99e98;
+  font-size: 22rpx;
+}
+
+.stat-value {
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 700;
 }

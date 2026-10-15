@@ -17,6 +17,12 @@ from .service import (
     simulated_route,
 )
 
+from .map_service import (
+    MapServiceError,
+    geocode_address,
+    plan_route,
+    plan_route_via_restaurant,
+)
 
 app = FastAPI(
     title="顺路去哪吃 API",
@@ -33,6 +39,63 @@ class IntentRequest(BaseModel):
         examples=["我今天想吃家常菜，辣一点，50元以内"],
     )
 
+class LocationPoint(BaseModel):
+    name: str = Field(
+        min_length=1,
+        max_length=200,
+        description="地点名称",
+    )
+
+    address: str = Field(
+        default="",
+        max_length=300,
+        description="地点详细地址",
+    )
+
+    latitude: float = Field(
+        ge=-90,
+        le=90,
+        description="纬度",
+    )
+
+    longitude: float = Field(
+        ge=-180,
+        le=180,
+        description="经度",
+    )
+
+class DirectRouteRequest(BaseModel):
+    start_location: LocationPoint
+    destination_location: LocationPoint
+
+    travel_mode: Literal["公交", "骑行", "步行"] = Field(
+        default="公交",
+        description="路线使用的出行方式",
+    )
+
+class MealRouteRequest(BaseModel):
+    start_location: LocationPoint
+    destination_location: LocationPoint
+
+    restaurant_id: int = Field(
+        gt=0,
+        description="用户选中的餐厅ID",
+    )
+
+    travel_mode: Literal[
+        "公交",
+        "骑行",
+        "步行",
+    ] = Field(
+        default="公交",
+        description="保持不变的出行方式",
+    )
+
+    original_duration_minutes: float = Field(
+        default=0,
+        ge=0,
+        description="用户确认的原通勤路线时间",
+    )
 
 class RestaurantFilterRequest(BaseModel):
     text: str = Field(
@@ -44,6 +107,16 @@ class RestaurantFilterRequest(BaseModel):
     travel_mode: Literal["公交", "骑行", "步行"] = Field(
         default="公交",
         description="用户已经选择的出行方式",
+    )
+
+    start_location: LocationPoint | None = Field(
+        default=None,
+        description="地图选择的起点",
+    )
+
+    destination_location: LocationPoint | None = Field(
+        default=None,
+        description="地图选择的终点",
     )
 
     rejected_ids: list[int] = Field(
@@ -62,6 +135,16 @@ class RoutePreviewRequest(BaseModel):
         min_length=1,
         max_length=100,
         description="最终目的地",
+    )
+
+    start_location: LocationPoint | None = Field(
+        default=None,
+        description="地图选择的起点",
+    )
+
+    destination_location: LocationPoint | None = Field(
+        default=None,
+        description="地图选择的终点",
     )
 
     restaurant_id: int = Field(
@@ -211,6 +294,165 @@ def draw_restaurant_lottery(request: RestaurantFilterRequest):
         "travel_mode": request.travel_mode,
         "rejected_ids": request.rejected_ids,
         "restaurants": lottery_results,
+    }
+
+@app.post("/map/direct-route")
+def get_direct_route(request: DirectRouteRequest):
+    try:
+        route = plan_route(
+            start_latitude=(
+                request.start_location.latitude
+            ),
+            start_longitude=(
+                request.start_location.longitude
+            ),
+            destination_latitude=(
+                request.destination_location.latitude
+            ),
+            destination_longitude=(
+                request.destination_location.longitude
+            ),
+            travel_mode=request.travel_mode,
+        )
+    except MapServiceError as error:
+        raise HTTPException(
+            status_code=502,
+            detail=str(error),
+        ) from error
+
+    return {
+        "success": True,
+        "route_type": "real",
+        "start": request.start_location.model_dump(),
+        "destination": (
+            request.destination_location.model_dump()
+        ),
+        **route,
+    }
+
+@app.post("/map/meal-route")
+def get_meal_route(request: MealRouteRequest):
+    selected_restaurant = next(
+        (
+            restaurant
+            for restaurant in RESTAURANTS
+            if restaurant.id
+            == request.restaurant_id
+        ),
+        None,
+    )
+
+    if selected_restaurant is None:
+        raise HTTPException(
+            status_code=404,
+            detail="没有找到对应的餐厅",
+        )
+
+    restaurant_address = (
+        selected_restaurant.address
+    )
+
+    if "杭州" not in restaurant_address:
+        restaurant_address = (
+            f"杭州市{restaurant_address}"
+        )
+
+    try:
+        restaurant_location = (
+            geocode_address(
+                restaurant_address
+            )
+        )
+
+        route = plan_route_via_restaurant(
+            start_latitude=(
+                request
+                .start_location
+                .latitude
+            ),
+            start_longitude=(
+                request
+                .start_location
+                .longitude
+            ),
+            restaurant_latitude=(
+                restaurant_location[
+                    "latitude"
+                ]
+            ),
+            restaurant_longitude=(
+                restaurant_location[
+                    "longitude"
+                ]
+            ),
+            destination_latitude=(
+                request
+                .destination_location
+                .latitude
+            ),
+            destination_longitude=(
+                request
+                .destination_location
+                .longitude
+            ),
+            travel_mode=(
+                request.travel_mode
+            ),
+        )
+
+    except MapServiceError as error:
+        raise HTTPException(
+            status_code=502,
+            detail=str(error),
+        ) from error
+
+    detour_minutes = max(
+        0,
+        round(
+            route["duration_minutes"]
+            - request.original_duration_minutes
+        ),
+    )
+
+    return {
+        "success": True,
+        "route_type": (
+            "real_via_restaurant"
+        ),
+        "start": (
+            request
+            .start_location
+            .model_dump()
+        ),
+        "restaurant": {
+            "id": selected_restaurant.id,
+            "name": selected_restaurant.name,
+            "address": (
+                selected_restaurant.address
+            ),
+            "location": {
+                "latitude": (
+                    restaurant_location[
+                        "latitude"
+                    ]
+                ),
+                "longitude": (
+                    restaurant_location[
+                        "longitude"
+                    ]
+                ),
+            },
+        },
+        "destination": (
+            request
+            .destination_location
+            .model_dump()
+        ),
+        "original_duration_minutes": (
+            request.original_duration_minutes
+        ),
+        "detour_minutes": detour_minutes,
+        **route,
     }
 
 @app.post("/route/preview")

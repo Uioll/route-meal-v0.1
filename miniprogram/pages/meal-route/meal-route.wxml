@@ -1,0 +1,138 @@
+<view class="page">
+  <map
+    id="mealRouteMap"
+    class="route-map"
+    longitude="{{mapLongitude}}"
+    latitude="{{mapLatitude}}"
+    scale="13"
+    polyline="{{mapPolylines}}"
+    circles="{{mapCircles}}"
+    include-points="{{mapIncludePoints}}"
+    enable-zoom="{{true}}"
+    enable-scroll="{{true}}"
+    enable-rotate="{{false}}"
+    show-scale="{{true}}"
+  ></map>
+
+  <view
+    class="restaurant-panel"
+    wx:if="{{restaurant}}"
+  >
+    <view class="restaurant-dot"></view>
+
+    <view class="restaurant-content">
+      <text class="panel-label">
+        途经餐厅
+      </text>
+
+      <text class="restaurant-name">
+        {{restaurant.name}}
+      </text>
+
+      <text class="restaurant-address">
+        {{restaurant.address}}
+      </text>
+    </view>
+
+    <text class="mode-badge">
+      {{session.travelMode}}
+    </text>
+  </view>
+
+  <view class="route-sheet">
+    <view class="sheet-handle"></view>
+
+    <view
+      wx:if="{{isLoading}}"
+      class="state-box"
+    >
+      <view class="loading-circle"></view>
+      <text>正在生成经过餐厅的新路线…</text>
+    </view>
+
+    <view
+      wx:elif="{{errorMessage}}"
+      class="state-box"
+    >
+      <text class="error-title">
+        新路线生成失败
+      </text>
+
+      <text class="error-message">
+        {{errorMessage}}
+      </text>
+
+      <button
+        class="retry-button"
+        bindtap="retryLoadRoute"
+      >
+        重新加载
+      </button>
+    </view>
+
+    <block wx:elif="{{routeData}}">
+      <text class="sheet-title">
+        新路线已生成
+      </text>
+
+      <view class="route-stats">
+        <view class="stat-item">
+          <text class="stat-value">
+            {{displayDuration}}
+          </text>
+          <text class="stat-label">
+            预计用时
+          </text>
+        </view>
+
+        <view class="stat-item">
+          <text class="stat-value">
+            {{displayDistance}}
+          </text>
+          <text class="stat-label">
+            总距离
+          </text>
+        </view>
+
+        <view class="stat-item">
+          <text class="stat-value detour-value">
+            +{{displayDetour}}
+          </text>
+          <text class="stat-label">
+            相比原路线
+          </text>
+        </view>
+      </view>
+
+      <view class="segment-list">
+        <view
+          class="segment-item"
+          wx:for="{{routeData.segments}}"
+          wx:key="key"
+        >
+          <view
+            class="segment-line {{index === 0 ? 'first-line' : 'second-line'}}"
+          ></view>
+
+          <view class="segment-content">
+            <text class="segment-title">
+              {{item.label}}
+            </text>
+
+            <text class="segment-summary">
+              {{item.summary}} ·
+              {{item.duration_minutes}}分钟
+            </text>
+          </view>
+        </view>
+      </view>
+
+      <button
+        class="arrival-button"
+        bindtap="goToReview"
+      >
+        模拟到店并评价
+      </button>
+    </block>
+  </view>
+</view>

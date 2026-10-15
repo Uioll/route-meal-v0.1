@@ -1,0 +1,217 @@
+page {
+  min-height: 100%;
+  background: #fff8f2;
+}
+
+.page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 28rpx;
+}
+
+.restaurant-card {
+  display: flex;
+  align-items: center;
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+  background: #2f2925;
+  border-radius: 26rpx;
+  box-shadow: 0 12rpx 30rpx rgba(47, 41, 37, 0.16);
+}
+
+.restaurant-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 82rpx;
+  height: 82rpx;
+  margin-right: 24rpx;
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 700;
+  background: #ff7043;
+  border-radius: 50%;
+}
+
+.restaurant-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.restaurant-label {
+  margin-bottom: 8rpx;
+  color: #c7bbb3;
+  font-size: 24rpx;
+}
+
+.restaurant-name {
+  color: #ffffff;
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.restaurant-address {
+  margin-top: 8rpx;
+  color: #c7bbb3;
+  font-size: 25rpx;
+}
+
+.review-card {
+  padding: 34rpx;
+  background: #ffffff;
+  border-radius: 28rpx;
+  box-shadow: 0 10rpx 30rpx rgba(91, 61, 40, 0.08);
+}
+
+.page-title {
+  display: block;
+  color: #2f2925;
+  font-size: 38rpx;
+  font-weight: 700;
+}
+
+.page-subtitle {
+  display: block;
+  margin-top: 12rpx;
+  color: #99897d;
+  font-size: 25rpx;
+}
+
+.form-section {
+  position: relative;
+  margin-top: 34rpx;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 16rpx;
+  color: #4c4038;
+  font-size: 27rpx;
+  font-weight: 600;
+}
+
+.form-input {
+  height: 86rpx;
+  box-sizing: border-box;
+  padding: 0 24rpx;
+  color: #2f2925;
+  font-size: 29rpx;
+  background: #fffaf5;
+  border: 2rpx solid #eee3db;
+  border-radius: 18rpx;
+}
+
+.form-textarea {
+  width: 100%;
+  height: 220rpx;
+  box-sizing: border-box;
+  padding: 22rpx;
+  color: #2f2925;
+  font-size: 28rpx;
+  line-height: 1.6;
+  background: #fffaf5;
+  border: 2rpx solid #eee3db;
+  border-radius: 18rpx;
+}
+
+.character-count {
+  display: block;
+  margin-top: 10rpx;
+  color: #b3a69e;
+  font-size: 23rpx;
+  text-align: right;
+}
+
+.return-options {
+  display: flex;
+  gap: 20rpx;
+}
+
+.return-option {
+  flex: 1;
+  padding: 24rpx 10rpx;
+  color: #7a6b61;
+  font-size: 27rpx;
+  text-align: center;
+  background: #fffaf5;
+  border: 2rpx solid #e4d9d1;
+  border-radius: 18rpx;
+}
+
+.return-option.active {
+  color: #ffffff;
+  font-weight: 600;
+  background: #ff7043;
+  border-color: #ff7043;
+}
+
+.save-button {
+  margin-top: 42rpx;
+  color: #ffffff;
+  font-size: 29rpx;
+  font-weight: 600;
+  background: #2f2925;
+  border-radius: 46rpx;
+}
+
+.save-button::after,
+.history-button::after,
+.home-button::after {
+  border: none;
+}
+
+.saved-card {
+  padding: 42rpx 34rpx;
+  color: #ffffff;
+  background: #2fb06f;
+  border-radius: 28rpx;
+  box-shadow: 0 14rpx 32rpx rgba(47, 176, 111, 0.22);
+}
+
+.success-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76rpx;
+  height: 76rpx;
+  margin-bottom: 24rpx;
+  color: #2fb06f;
+  font-size: 46rpx;
+  font-weight: 700;
+  background: #ffffff;
+  border-radius: 50%;
+}
+
+.saved-title {
+  display: block;
+  margin-bottom: 30rpx;
+  font-size: 36rpx;
+  font-weight: 700;
+}
+
+.saved-line {
+  display: block;
+  margin-top: 20rpx;
+  font-size: 27rpx;
+  line-height: 1.6;
+}
+
+.history-button {
+  margin-top: 40rpx;
+  color: #2fb06f;
+  font-size: 28rpx;
+  font-weight: 600;
+  background: #ffffff;
+  border-radius: 44rpx;
+}
+
+.home-button {
+  margin-top: 18rpx;
+  color: #ffffff;
+  font-size: 28rpx;
+  background: transparent;
+  border: 2rpx solid rgba(255, 255, 255, 0.75);
+  border-radius: 44rpx;
+}

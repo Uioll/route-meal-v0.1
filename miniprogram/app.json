@@ -1,6 +1,10 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/routes/routes",
+    "pages/lottery/lottery",
+    "pages/meal-route/meal-route",
+    "pages/review/review",
     "pages/history/history"
   ],
   "window": {
@@ -9,6 +13,14 @@
     "navigationBarBackgroundColor": "#fff8f2",
     "backgroundColor": "#fff8f2"
   },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于选择出发地和目的地，规划顺路餐厅路线"
+    }
+  },
+  "requiredPrivateInfos": [
+    "chooseLocation"
+  ],
   "tabBar": {
     "color": "#8c817a",
     "selectedColor": "#ff7043",
