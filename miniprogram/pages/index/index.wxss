@@ -351,3 +351,96 @@ page {
 .redraw-button::after {
   border: none;
 }
+.arrival-button {
+  margin-top: 26rpx;
+  color: #ffffff;
+  font-size: 28rpx;
+  font-weight: 600;
+  background: #ff7a45;
+  border-radius: 44rpx;
+}
+
+.arrival-button::after {
+  border: none;
+}
+
+.visit-form {
+  margin-top: 30rpx;
+}
+
+.form-label {
+  display: block;
+  margin: 26rpx 0 14rpx;
+  color: #65584f;
+  font-size: 27rpx;
+  font-weight: 600;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 22rpx;
+  font-size: 28rpx;
+  background: #f8f5f2;
+  border-radius: 18rpx;
+  box-sizing: border-box;
+}
+
+.form-textarea {
+  height: 150rpx;
+}
+
+.return-options {
+  display: flex;
+  gap: 20rpx;
+}
+
+.return-option {
+  flex: 1;
+  padding: 20rpx 0;
+  text-align: center;
+  color: #75675e;
+  background: #f7f3ef;
+  border-radius: 18rpx;
+}
+
+.return-option.active {
+  color: #ffffff;
+  font-weight: 600;
+  background: #ff7a45;
+}
+
+.save-visit-button {
+  margin-top: 32rpx;
+  color: #ffffff;
+  font-size: 29rpx;
+  background: #2f2925;
+  border-radius: 44rpx;
+}
+
+.save-visit-button::after {
+  border: none;
+}
+
+.saved-visit-card {
+  margin-top: 30rpx;
+  padding: 34rpx;
+  color: #ffffff;
+  background: #32a866;
+  border-radius: 28rpx;
+  box-shadow: 0 12rpx 28rpx rgba(50, 168, 102, 0.2);
+}
+
+.saved-title {
+  display: block;
+  margin-bottom: 20rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.saved-line {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 26rpx;
+  line-height: 1.6;
+}

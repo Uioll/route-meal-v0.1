@@ -193,5 +193,83 @@
     <text class="detour-text">
       预计增加 {{routePreview.detour_minutes}} 分钟
     </text>
+    <button class="arrival-button" bindtap="showVisitForm">
+      模拟到店并评价
+    </button> 
   </view>
+</view>
+
+<view class="card visit-form" wx:if="{{visitFormVisible}}">
+  <text class="section-title">
+    评价 {{routePreview.restaurant.name}}
+  </text>
+
+  <text class="form-label">个人评分（1～5分）</text>
+
+  <input
+    class="form-input"
+    type="digit"
+    placeholder="例如：4.5"
+    value="{{personalRating}}"
+    bindinput="onRatingInput"
+  />
+
+  <text class="form-label">简短评价</text>
+
+  <textarea
+    class="form-textarea"
+    placeholder="例如：味道不错，路线也比较顺"
+    maxlength="500"
+    value="{{visitComment}}"
+    bindinput="onCommentInput"
+  ></textarea>
+
+  <text class="form-label">以后愿意再来吗？</text>
+
+  <view class="return-options">
+    <view
+      class="return-option {{willingToReturn === true ? 'active' : ''}}"
+      data-value="true"
+      bindtap="selectReturnChoice"
+    >
+      愿意
+    </view>
+
+    <view
+      class="return-option {{willingToReturn === false ? 'active' : ''}}"
+      data-value="false"
+      bindtap="selectReturnChoice"
+    >
+      不愿意
+    </view>
+  </view>
+
+  <button
+    class="save-visit-button"
+    bindtap="saveVisit"
+    loading="{{isSavingVisit}}"
+    disabled="{{isSavingVisit}}"
+  >
+    {{isSavingVisit ? "正在保存..." : "保存用餐记录"}}
+  </button>
+</view>
+
+<view class="saved-visit-card" wx:if="{{savedVisit}}">
+  <text class="saved-title">本次用餐已记录</text>
+
+  <text class="saved-line">
+    餐厅：{{savedVisit.restaurant_name}}
+  </text>
+
+  <text class="saved-line">
+    个人评分：{{savedVisit.personal_rating}}
+  </text>
+
+  <text class="saved-line" wx:if="{{savedVisit.comment}}">
+    评价：{{savedVisit.comment}}
+  </text>
+
+  <text class="saved-line">
+    是否愿意再来：{{savedVisit.willing_to_return ? "愿意" : "不愿意"}}
+  </text>
 </view>

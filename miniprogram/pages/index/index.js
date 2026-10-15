@@ -11,7 +11,13 @@ Page({
     isRouteLoading: false,
     selectedRestaurantId: null,
     routePreview: null,
-    rejectedIds: []
+    rejectedIds: [],
+    visitFormVisible: false,
+    personalRating: "",
+    visitComment: "",
+    willingToReturn: true,
+    isSavingVisit: false,
+    savedVisit: null
   },
 
   onStartInput(event) {
@@ -238,6 +244,135 @@ Page({
       complete: () => {
         this.setData({
           isRouteLoading: false
+        })
+      }
+    })
+  },
+  showVisitForm() {
+    this.setData({
+      visitFormVisible: true,
+      personalRating: "",
+      visitComment: "",
+      willingToReturn: true
+    })
+  },
+  
+  onRatingInput(event) {
+    this.setData({
+      personalRating: event.detail.value
+    })
+  },
+  
+  onCommentInput(event) {
+    this.setData({
+      visitComment: event.detail.value
+    })
+  },
+  
+  selectReturnChoice(event) {
+    this.setData({
+      willingToReturn: event.currentTarget.dataset.value === "true"
+    })
+  },
+  
+  saveVisit() {
+    const ratingText = String(this.data.personalRating).trim()
+    const rating = Number(ratingText)
+  
+    if (!ratingText || Number.isNaN(rating)) {
+      wx.showToast({
+        title: "请输入个人评分",
+        icon: "none"
+      })
+      return
+    }
+  
+    if (rating < 1 || rating > 5) {
+      wx.showToast({
+        title: "评分必须在1到5之间",
+        icon: "none"
+      })
+      return
+    }
+  
+    if (!/^[1-5](\.\d)?$/.test(ratingText)) {
+      wx.showToast({
+        title: "评分最多保留一位小数",
+        icon: "none"
+      })
+      return
+    }
+  
+    if (!this.data.routePreview) {
+      wx.showToast({
+        title: "请先选择餐厅",
+        icon: "none"
+      })
+      return
+    }
+  
+    this.setData({
+      isSavingVisit: true
+    })
+  
+    wx.request({
+      url: "http://127.0.0.1:8000/visits",
+      method: "POST",
+  
+      header: {
+        "content-type": "application/json"
+      },
+  
+      data: {
+        restaurant_id: this.data.routePreview.restaurant.id,
+        personal_rating: rating,
+        comment: this.data.visitComment.trim(),
+        willing_to_return: this.data.willingToReturn
+      },
+  
+      success: (response) => {
+        console.log("保存接口返回：", response)
+        if (
+          response.statusCode === 200 &&
+          response.data.success === true
+        ) {
+          this.setData({
+            visitFormVisible: false,
+            savedVisit: response.data.visit
+          })
+  
+          wx.showToast({
+            title: "用餐记录已保存",
+            icon: "success"
+          })
+        } else {
+          const detail = response.data.detail
+          let message = "保存失败"
+  
+          if (typeof detail === "string") {
+            message = detail
+          }
+  
+          wx.showToast({
+            title: message,
+            icon: "none",
+            duration: 2500
+          })
+        }
+      },
+  
+      fail: (error) => {
+        console.error("保存用餐记录失败：", error)
+  
+        wx.showToast({
+          title: "无法连接后端",
+          icon: "none"
+        })
+      },
+  
+      complete: () => {
+        this.setData({
+          isSavingVisit: false
         })
       }
     })
