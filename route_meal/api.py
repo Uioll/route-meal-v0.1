@@ -1,9 +1,14 @@
+from datetime import datetime
+
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from .data import RESTAURANTS
+from .models import VisitRecord
+from .storage import VisitHistory
+
 from .parser import parse_intent
 from .service import (
     draw_two,
@@ -67,6 +72,28 @@ class RoutePreviewRequest(BaseModel):
     travel_mode: Literal["公交", "骑行", "步行"] = Field(
         default="公交",
         description="保持不变的出行方式",
+    )
+
+class VisitCreateRequest(BaseModel):
+    restaurant_id: int = Field(
+        gt=0,
+        description="用户选择的餐厅ID",
+    )
+
+    personal_rating: float = Field(
+        ge=1,
+        le=5,
+        description="个人评分，1到5分，最多一位小数",
+    )
+
+    comment: str = Field(
+        default="",
+        max_length=500,
+        description="用户的简短评价",
+    )
+
+    willing_to_return: bool = Field(
+        description="用户是否愿意再次前往",
     )
 
 @app.get("/")
@@ -225,4 +252,57 @@ def preview_route(request: RoutePreviewRequest):
             request.travel_mode
         ],
         "route_text": route_text,
+    }
+
+@app.post("/visits")
+def create_visit(request: VisitCreateRequest):
+    if abs(
+        request.personal_rating
+        - round(request.personal_rating, 1)
+    ) > 0.000001:
+        raise HTTPException(
+            status_code=422,
+            detail="个人评分最多只能保留一位小数",
+        )
+
+    selected_restaurant = next(
+        (
+            restaurant
+            for restaurant in RESTAURANTS
+            if restaurant.id == request.restaurant_id
+        ),
+        None,
+    )
+
+    if selected_restaurant is None:
+        raise HTTPException(
+            status_code=404,
+            detail="没有找到对应的餐厅",
+        )
+
+    record = VisitRecord(
+        restaurant_id=selected_restaurant.id,
+        restaurant_name=selected_restaurant.name,
+        visited_at=datetime.now().isoformat(timespec="seconds"),
+        personal_rating=request.personal_rating,
+        comment=request.comment,
+        willing_to_return=request.willing_to_return,
+    )
+
+    VisitHistory().append(record)
+
+    return {
+        "success": True,
+        "message": "用餐记录保存成功",
+        "visit": record.to_dict(),
+    }
+
+@app.get("/visits")
+def get_visits():
+    history = VisitHistory().load()
+
+    return {
+        "success": True,
+        "visit_count": len(history),
+        "visits": history,
     }
