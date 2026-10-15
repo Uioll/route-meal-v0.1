@@ -1,0 +1,135 @@
+page {
+  background: #fff8f2;
+  color: #302824;
+}
+
+.history-page {
+  min-height: 100vh;
+  padding: 28rpx;
+  padding-bottom: 80rpx;
+  box-sizing: border-box;
+}
+
+.summary-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  border-radius: 28rpx;
+  background: #302824;
+  color: #ffffff;
+}
+
+.summary-title {
+  font-size: 38rpx;
+  font-weight: 700;
+}
+
+.summary-count {
+  font-size: 26rpx;
+  color: #d8cec8;
+}
+
+.state-card {
+  padding: 70rpx 30rpx;
+  border-radius: 28rpx;
+  background: #ffffff;
+  color: #8c817a;
+  text-align: center;
+}
+
+.error-text {
+  color: #e35d43;
+}
+
+.visit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.visit-card {
+  padding: 32rpx;
+  border-radius: 28rpx;
+  background: #ffffff;
+  box-shadow: 0 10rpx 30rpx rgba(80, 55, 40, 0.07);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20rpx;
+  padding-bottom: 24rpx;
+  border-bottom: 2rpx solid #f4ebe5;
+}
+
+.restaurant-name {
+  flex: 1;
+  font-size: 34rpx;
+  font-weight: 700;
+}
+
+.return-badge {
+  padding: 10rpx 18rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+}
+
+.willing {
+  color: #16834b;
+  background: #e7f7ed;
+}
+
+.unwilling {
+  color: #c24f3b;
+  background: #fff0ec;
+}
+
+.rating-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 26rpx;
+}
+
+.rating-label {
+  color: #8c817a;
+}
+
+.rating-value {
+  color: #ff7043;
+  font-weight: 700;
+}
+
+.comment-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+  padding: 22rpx;
+  margin-top: 22rpx;
+  border-radius: 20rpx;
+  background: #fff8f2;
+}
+
+.comment-label {
+  color: #ff7043;
+  font-weight: 700;
+}
+
+.comment-content {
+  color: #4d433e;
+  line-height: 1.6;
+}
+
+.empty-comment {
+  color: #aaa09a;
+}
+
+.visit-time {
+  display: block;
+  margin-top: 22rpx;
+  color: #aaa09a;
+  font-size: 24rpx;
+  text-align: right;
+}

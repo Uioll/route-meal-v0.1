@@ -1,12 +1,29 @@
 {
   "pages": [
-    "pages/index/index"
+    "pages/index/index",
+    "pages/history/history"
   ],
   "window": {
-    "navigationBarBackgroundColor": "#fff7ed",
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "顺路去哪吃",
-    "backgroundColor": "#fffaf5"
+    "navigationBarBackgroundColor": "#fff8f2",
+    "backgroundColor": "#fff8f2"
+  },
+  "tabBar": {
+    "color": "#8c817a",
+    "selectedColor": "#ff7043",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "抽签"
+      },
+      {
+        "pagePath": "pages/history/history",
+        "text": "吃过的"
+      }
+    ]
   },
   "style": "v2",
   "sitemapLocation": "sitemap.json",

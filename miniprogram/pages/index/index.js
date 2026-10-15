@@ -17,7 +17,8 @@ Page({
     visitComment: "",
     willingToReturn: true,
     isSavingVisit: false,
-    savedVisit: null
+    savedVisit: null,
+    isSaving: false,
   },
 
   onStartInput(event) {
@@ -276,6 +277,9 @@ Page({
   },
   
   saveVisit() {
+    if (this.data.isSaving) {
+      return
+    }
     const ratingText = String(this.data.personalRating).trim()
     const rating = Number(ratingText)
   
@@ -312,7 +316,8 @@ Page({
     }
   
     this.setData({
-      isSavingVisit: true
+      isSavingVisit: true,      
+      isSaving: true
     })
   
     wx.request({
@@ -329,7 +334,7 @@ Page({
         comment: this.data.visitComment.trim(),
         willing_to_return: this.data.willingToReturn
       },
-  
+      
       success: (response) => {
         console.log("保存接口返回：", response)
         if (
@@ -372,9 +377,10 @@ Page({
   
       complete: () => {
         this.setData({
-          isSavingVisit: false
+          isSaving: false
         })
       }
     })
-  }
+  },
+  
 })

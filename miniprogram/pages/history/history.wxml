@@ -1,0 +1,59 @@
+<view class="history-page">
+  <view class="summary-card">
+    <text class="summary-title">吃过的餐厅</text>
+    <text class="summary-count">共记录 {{visitCount}} 次用餐</text>
+  </view>
+
+  <view wx:if="{{isLoading}}" class="state-card">
+    正在加载历史记录……
+  </view>
+
+  <view wx:elif="{{loadFailed}}" class="state-card error-text">
+    加载失败，请检查后端是否正在运行，然后下拉刷新
+  </view>
+
+  <view
+    wx:elif="{{visits.length === 0}}"
+    class="state-card"
+  >
+    还没有用餐记录，先去抽一家试试吧
+  </view>
+
+  <view wx:else class="visit-list">
+    <view
+      wx:for="{{visits}}"
+      wx:key="index"
+      class="visit-card"
+    >
+      <view class="card-header">
+        <text class="restaurant-name">
+          {{item.restaurant_name}}
+        </text>
+
+        <text
+          class="{{item.willing_to_return ? 'return-badge willing' : 'return-badge unwilling'}}"
+        >
+          {{item.willing_to_return ? '愿意再来' : '不再考虑'}}
+        </text>
+      </view>
+
+      <view class="rating-row">
+        <text class="rating-label">个人评分</text>
+        <text class="rating-value">
+          {{item.personal_rating}} / 5
+        </text>
+      </view>
+
+      <view wx:if="{{item.comment}}" class="comment-box">
+        <text class="comment-label">我的评价</text>
+        <text class="comment-content">{{item.comment}}</text>
+      </view>
+
+      <view wx:else class="comment-box empty-comment">
+        没有填写评价
+      </view>
+
+      <text class="visit-time">{{item.display_time}}</text>
+    </view>
+  </view>
+</view>

@@ -247,10 +247,10 @@
   <button
     class="save-visit-button"
     bindtap="saveVisit"
-    loading="{{isSavingVisit}}"
-    disabled="{{isSavingVisit}}"
+    loading="{{isSaving}}"
+    disabled="{{isSaving}}"
   >
-    {{isSavingVisit ? "正在保存..." : "保存用餐记录"}}
+    {{isSaving ? '正在保存...' : '保存用餐记录'}}
   </button>
 </view>
 
