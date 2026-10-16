@@ -1,5 +1,5 @@
 from datetime import datetime
-
+import random
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException
@@ -22,6 +22,7 @@ from .map_service import (
     geocode_address,
     plan_route,
     plan_route_via_restaurant,
+    search_restaurants_along_route,
 )
 
 app = FastAPI(
@@ -73,14 +74,174 @@ class DirectRouteRequest(BaseModel):
         description="路线使用的出行方式",
     )
 
+class RoutePoint(BaseModel):
+    latitude: float = Field(
+        ge=-90,
+        le=90,
+        description="路线点纬度",
+    )
+
+    longitude: float = Field(
+        ge=-180,
+        le=180,
+        description="路线点经度",
+    )
+
+
+class RouteRestaurantSearchRequest(BaseModel):
+    route_points: list[RoutePoint] = Field(
+        min_length=2,
+        description="用户确认路线的坐标点",
+    )
+
+    max_search_points: int = Field(
+        default=3,
+        ge=2,
+        le=10,
+        description="从路线中抽取的餐厅检索点数量",
+    )
+
+    radius_meters: int = Field(
+        default=800,
+        ge=1,
+        le=1000,
+        description="每个路线点的餐厅搜索半径",
+    )
+
+    page_size_per_point: int = Field(
+        default=10,
+        ge=1,
+        le=20,
+        description="每个路线点最多获取的餐厅数量",
+    )
+
+class RoutePoint(BaseModel):
+    latitude: float = Field(
+        ge=-90,
+        le=90,
+        description="路线点纬度",
+    )
+
+    longitude: float = Field(
+        ge=-180,
+        le=180,
+        description="路线点经度",
+    )
+
+
+class RouteRestaurantSearchRequest(BaseModel):
+    route_points: list[RoutePoint] = Field(
+        min_length=2,
+        description="用户确认路线的坐标点",
+    )
+
+    max_search_points: int = Field(
+        default=3,
+        ge=2,
+        le=10,
+        description="从路线中抽取的餐厅检索点数量",
+    )
+
+    radius_meters: int = Field(
+        default=800,
+        ge=1,
+        le=1000,
+        description="每个路线点的餐厅搜索半径",
+    )
+
+    page_size_per_point: int = Field(
+        default=10,
+        ge=1,
+        le=20,
+        description="每个路线点最多获取的餐厅数量",
+    )
+
+    
+    keyword: str = Field(
+        default="餐厅",
+        min_length=1,
+        max_length=50,
+        description="餐厅搜索关键词，例如家常菜、火锅、川菜",
+    )
+
+class RealLotteryRequest(BaseModel):
+    text: str = Field(
+        min_length=1,
+        max_length=200,
+        description="用户今天想吃什么",
+    )
+
+    route_points: list[RoutePoint] = Field(
+        min_length=2,
+        description="用户确认的通勤路线坐标点",
+    )
+
+    rejected_ids: list[str] = Field(
+        default_factory=list,
+        description="本轮已经拒绝的腾讯地图餐厅 POI ID",
+    )
+
+    max_search_points: int = Field(
+        default=5,
+        ge=2,
+        le=10,
+        description="从路线中抽取的餐厅检索点数量",
+    )
+
+    radius_meters: int = Field(
+        default=800,
+        ge=100,
+        le=1000,
+        description="每个路线采样点的检索半径",
+    )
+
+    page_size_per_point: int = Field(
+        default=10,
+        ge=1,
+        le=20,
+        description="每个路线采样点最多获取的餐厅数量",
+    )
+
+class MealRouteRestaurant(BaseModel):
+    id: str = Field(
+        min_length=1,
+        description="腾讯地图餐厅 POI ID",
+    )
+
+    name: str = Field(
+        min_length=1,
+        max_length=200,
+        description="餐厅名称",
+    )
+
+    address: str = Field(
+        default="",
+        max_length=300,
+        description="餐厅地址",
+    )
+
+    latitude: float = Field(
+        ge=-90,
+        le=90,
+        description="餐厅纬度",
+    )
+
+    longitude: float = Field(
+        ge=-180,
+        le=180,
+        description="餐厅经度",
+    )
+
+    telephone: str = Field(
+        default="",
+        max_length=200,
+        description="餐厅联系电话",
+    )
+
 class MealRouteRequest(BaseModel):
     start_location: LocationPoint
     destination_location: LocationPoint
-
-    restaurant_id: int = Field(
-        gt=0,
-        description="用户选中的餐厅ID",
-    )
+    restaurant: MealRouteRestaurant
 
     travel_mode: Literal[
         "公交",
@@ -158,9 +319,20 @@ class RoutePreviewRequest(BaseModel):
     )
 
 class VisitCreateRequest(BaseModel):
-    restaurant_id: int = Field(
-        gt=0,
-        description="用户选择的餐厅ID",
+    restaurant_id: int | str = Field(
+        description="餐厅ID或腾讯地图POI ID",
+    )
+
+    restaurant_name: str = Field(
+        min_length=1,
+        max_length=200,
+        description="餐厅名称",
+    )
+
+    restaurant_address: str = Field(
+        default="",
+        max_length=300,
+        description="餐厅地址",
     )
 
     personal_rating: float = Field(
@@ -330,74 +502,170 @@ def get_direct_route(request: DirectRouteRequest):
         **route,
     }
 
-@app.post("/map/meal-route")
-def get_meal_route(request: MealRouteRequest):
-    selected_restaurant = next(
-        (
-            restaurant
-            for restaurant in RESTAURANTS
-            if restaurant.id
-            == request.restaurant_id
-        ),
-        None,
-    )
-
-    if selected_restaurant is None:
-        raise HTTPException(
-            status_code=404,
-            detail="没有找到对应的餐厅",
-        )
-
-    restaurant_address = (
-        selected_restaurant.address
-    )
-
-    if "杭州" not in restaurant_address:
-        restaurant_address = (
-            f"杭州市{restaurant_address}"
-        )
+@app.post("/restaurants/route-search")
+def search_real_restaurants_along_route(
+    request: RouteRestaurantSearchRequest,
+    ):
+    route_points = [
+        point.model_dump()
+        for point in request.route_points
+    ]
 
     try:
-        restaurant_location = (
-            geocode_address(
-                restaurant_address
-            )
+        result = search_restaurants_along_route(
+            route_points=route_points,
+            max_search_points=(
+                request.max_search_points
+            ),
+            radius_meters=request.radius_meters,
+            page_size_per_point=(
+                request.page_size_per_point
+            ),
+            keyword=request.keyword,
+        )
+    except MapServiceError as error:
+        raise HTTPException(
+            status_code=502,
+            detail=str(error),
+        ) from error
+
+    return {
+        "success": True,
+        **result,
+    }
+
+@app.post("/lottery/real-draw")
+def draw_real_restaurant_lottery(
+    request: RealLotteryRequest,
+):
+    intent = parse_intent(request.text)
+
+    keyword = (
+        intent.cuisines[0]
+        if intent.cuisines
+        else "餐厅"
+    )
+
+    route_search_result = (
+        search_restaurants_along_route(
+            route_points=[
+                point.model_dump()
+                for point in request.route_points
+            ],
+            max_search_points=(
+                request.max_search_points
+            ),
+            radius_meters=request.radius_meters,
+            page_size_per_point=(
+                request.page_size_per_point
+            ),
+            keyword=keyword,
+        )
+    )
+
+    rejected_ids = {
+        str(poi_id)
+        for poi_id in request.rejected_ids
+    }
+
+    candidates = [
+        restaurant
+        for restaurant
+        in route_search_result["restaurants"]
+        if str(restaurant["poi_id"])
+        not in rejected_ids
+    ]
+
+    displayed_count = min(2, len(candidates))
+
+    selected_restaurants = random.sample(
+        candidates,
+        displayed_count,
+    )
+
+    lottery_results = []
+
+    for restaurant in selected_restaurants:
+        category = restaurant.get(
+            "category",
+            "美食",
         )
 
+        category_parts = [
+            part
+            for part in category.split(":")
+            if part and part != "美食"
+        ]
+
+        distance = restaurant.get(
+            "distance_to_route_sample_meters",
+            0,
+        )
+
+        lottery_results.append(
+            {
+                "id": str(restaurant["poi_id"]),
+                "poi_id": str(
+                    restaurant["poi_id"]
+                ),
+                "name": restaurant["name"],
+                "address": restaurant["address"],
+                "telephone": restaurant.get(
+                    "telephone",
+                    "",
+                ),
+                "category": category,
+                "cuisine": category_parts,
+                "latitude": restaurant["latitude"],
+                "longitude": restaurant["longitude"],
+                "distance_to_route_meters": (
+                    distance
+                ),
+                "is_real": True,
+                "reason": (
+                    f"腾讯地图分类为“{category}”；"
+                    f"距离所选路线约{distance}米"
+                ),
+            }
+        )
+
+    return {
+        "success": True,
+        "data_source": "tencent_map",
+        "keyword": keyword,
+        "candidate_count": len(candidates),
+        "displayed_count": len(
+            lottery_results
+        ),
+        "rejected_ids": request.rejected_ids,
+        "restaurants": lottery_results,
+    }
+
+@app.post("/map/meal-route")
+def get_meal_route(request: MealRouteRequest):
+    restaurant = request.restaurant
+
+    try:
         route = plan_route_via_restaurant(
             start_latitude=(
-                request
-                .start_location
-                .latitude
+                request.start_location.latitude
             ),
             start_longitude=(
-                request
-                .start_location
-                .longitude
+                request.start_location.longitude
             ),
             restaurant_latitude=(
-                restaurant_location[
-                    "latitude"
-                ]
+                restaurant.latitude
             ),
             restaurant_longitude=(
-                restaurant_location[
-                    "longitude"
-                ]
+                restaurant.longitude
             ),
             destination_latitude=(
-                request
-                .destination_location
-                .latitude
+                request.destination_location.latitude
             ),
             destination_longitude=(
-                request
-                .destination_location
-                .longitude
+                request.destination_location.longitude
             ),
-            travel_mode=(
-                request.travel_mode
-            ),
+            travel_mode=request.travel_mode,
         )
 
     except MapServiceError as error:
@@ -416,31 +684,18 @@ def get_meal_route(request: MealRouteRequest):
 
     return {
         "success": True,
-        "route_type": (
-            "real_via_restaurant"
-        ),
+        "route_type": "real_via_restaurant",
         "start": (
-            request
-            .start_location
-            .model_dump()
+            request.start_location.model_dump()
         ),
         "restaurant": {
-            "id": selected_restaurant.id,
-            "name": selected_restaurant.name,
-            "address": (
-                selected_restaurant.address
-            ),
+            "id": restaurant.id,
+            "name": restaurant.name,
+            "address": restaurant.address,
+            "telephone": restaurant.telephone,
             "location": {
-                "latitude": (
-                    restaurant_location[
-                        "latitude"
-                    ]
-                ),
-                "longitude": (
-                    restaurant_location[
-                        "longitude"
-                    ]
-                ),
+                "latitude": restaurant.latitude,
+                "longitude": restaurant.longitude,
             },
         },
         "destination": (
@@ -507,30 +762,19 @@ def create_visit(request: VisitCreateRequest):
             detail="个人评分最多只能保留一位小数",
         )
 
-    selected_restaurant = next(
-        (
-            restaurant
-            for restaurant in RESTAURANTS
-            if restaurant.id == request.restaurant_id
-        ),
-        None,
-    )
-
-    if selected_restaurant is None:
-        raise HTTPException(
-            status_code=404,
-            detail="没有找到对应的餐厅",
-        )
-
     record = VisitRecord(
-        restaurant_id=selected_restaurant.id,
-        restaurant_name=selected_restaurant.name,
-        visited_at=datetime.now().isoformat(timespec="seconds"),
+        restaurant_id=request.restaurant_id,
+        restaurant_name=request.restaurant_name,
+        visited_at=datetime.now().isoformat(
+            timespec="seconds"
+        ),
         personal_rating=request.personal_rating,
         comment=request.comment,
         willing_to_return=request.willing_to_return,
+        restaurant_address=(
+            request.restaurant_address
+        ),
     )
-
     VisitHistory().append(record)
 
     return {
@@ -573,3 +817,4 @@ def delete_visit(record_id: int):
         "message": "用餐记录删除成功",
         "deleted_visit": deleted_record,
     }
+

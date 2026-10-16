@@ -33,10 +33,18 @@
     </view>
 
     <view class="restaurant-info">
-      <text>评分 {{item.rating}}</text>
-      <text>人均 {{item.average_price}} 元</text>
-      <text>绕路 {{item.detour_minutes}} 分钟</text>
+      <text>{{item.category}}</text>
+      <text>
+        距路线约 {{item.distance_to_route_meters}} 米
+      </text>
     </view>
+
+    <text
+      class="restaurant-telephone"
+      wx:if="{{item.telephone}}"
+    >
+      电话：{{item.telephone}}
+    </text>
 
     <view class="tag-list">
       <text

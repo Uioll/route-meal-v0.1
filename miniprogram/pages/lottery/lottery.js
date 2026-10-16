@@ -58,7 +58,7 @@ Page({
     }
 
     const displayedIds = this.data.restaurants.map(
-      restaurant => restaurant.id
+      restaurant => String(restaurant.id)
     )
 
     const rejectedIds = this.data.rejectedIds.concat(
@@ -73,7 +73,7 @@ Page({
     })
 
     wx.request({
-      url: "http://127.0.0.1:8000/lottery/draw",
+      url: "http://127.0.0.1:8000/lottery/real-draw",
       method: "POST",
 
       header: {
@@ -82,11 +82,14 @@ Page({
 
       data: {
         text: this.data.intentText,
-        travel_mode: this.data.travelMode,
-        rejected_ids: rejectedIds,
-        start_location: this.data.startLocation,
-        destination_location:
-          this.data.destinationLocation
+        route_points:
+          this.data.selectedCommuteRoute.route.points,
+        rejected_ids: rejectedIds.map(
+          restaurantId => String(restaurantId)
+        ),
+        max_search_points: 5,
+        radius_meters: 800,
+        page_size_per_point: 10
       },
 
       success: (response) => {
@@ -170,13 +173,14 @@ Page({
   },
 
   chooseRestaurant(event) {
-    const restaurantId = Number(
+    const restaurantId = String(
       event.currentTarget.dataset.id
     )
-
+  
     const selectedRestaurant =
       this.data.restaurants.find(
-        restaurant => restaurant.id === restaurantId
+        restaurant =>
+          String(restaurant.id) === restaurantId
       )
 
     if (!selectedRestaurant) {

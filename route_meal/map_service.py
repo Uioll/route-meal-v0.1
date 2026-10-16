@@ -1,7 +1,7 @@
 import os
 from functools import lru_cache
 from typing import Literal
-
+import math
 import httpx
 from dotenv import load_dotenv
 
@@ -550,4 +550,308 @@ def plan_route_via_restaurant(
                 ],
             },
         ],
+    }
+
+def search_nearby_restaurants(
+    latitude: float,
+    longitude: float,
+    radius_meters: int = 800,
+    page_size: int = 20,
+    keyword: str = "餐厅",
+) -> list[dict]:
+    if not 1 <= radius_meters <= 1000:
+        raise MapServiceError(
+            "餐厅搜索半径必须在1到1000米之间"
+        )
+
+    if not 1 <= page_size <= 20:
+        raise MapServiceError(
+            "每次搜索数量必须在1到20之间"
+        )
+
+    keyword = keyword.strip()
+
+    if not keyword:
+        keyword = "餐厅"
+
+    url = "https://apis.map.qq.com/ws/place/v1/search"
+
+    params = {
+        "keyword": keyword,
+        "boundary": (
+            f"nearby("
+            f"{latitude},"
+            f"{longitude},"
+            f"{radius_meters},"
+            f"0)"
+        ),
+        "filter": "category=美食",
+        "orderby": "_distance",
+        "page_size": page_size,
+        "page_index": 1,
+        "output": "json",
+        "key": get_map_key(),
+    }
+
+    try:
+        with httpx.Client(timeout=15.0) as client:
+            response = client.get(
+                url,
+                params=params,
+            )
+            response.raise_for_status()
+            result = response.json()
+    except httpx.HTTPError as error:
+        raise MapServiceError(
+            "连接腾讯地图餐厅搜索服务失败"
+        ) from error
+    except ValueError as error:
+        raise MapServiceError(
+            "腾讯地图没有返回有效的JSON数据"
+        ) from error
+
+    if result.get("status") != 0:
+        message = result.get(
+            "message",
+            "腾讯地图餐厅搜索返回未知错误",
+        )
+        raise MapServiceError(message)
+
+    restaurants = []
+
+    for item in result.get("data", []):
+        location = item.get("location") or {}
+
+        latitude_value = location.get("lat")
+        longitude_value = location.get("lng")
+
+        if (
+            latitude_value is None
+            or longitude_value is None
+        ):
+            continue
+
+        restaurants.append(
+            {
+                "poi_id": item.get("id", ""),
+                "name": item.get(
+                    "title",
+                    "未命名餐厅",
+                ),
+                "address": item.get(
+                    "address",
+                    "",
+                ),
+                "telephone": item.get(
+                    "tel",
+                    "",
+                ),
+                "category": item.get(
+                    "category",
+                    "",
+                ),
+                "latitude": latitude_value,
+                "longitude": longitude_value,
+            }
+        )
+
+    return restaurants
+
+def sample_route_points(
+    route_points: list[dict],
+    max_points: int = 5,
+) -> list[dict]:
+    if not route_points:
+        return []
+
+    if not 2 <= max_points <= 10:
+        raise MapServiceError(
+            "路线检索点数量必须在2到10之间"
+        )
+
+    point_count = len(route_points)
+
+    if point_count <= max_points:
+        selected_points = route_points
+    else:
+        selected_points = []
+
+        for index in range(max_points):
+            point_index = round(
+                index
+                * (point_count - 1)
+                / (max_points - 1)
+            )
+
+            selected_points.append(
+                route_points[point_index]
+            )
+
+    normalized_points = []
+
+    for point in selected_points:
+        latitude = point.get(
+            "latitude",
+            point.get("lat"),
+        )
+        longitude = point.get(
+            "longitude",
+            point.get("lng"),
+        )
+
+        if latitude is None or longitude is None:
+            continue
+
+        normalized_point = {
+            "latitude": float(latitude),
+            "longitude": float(longitude),
+        }
+
+        if normalized_point not in normalized_points:
+            normalized_points.append(
+                normalized_point
+            )
+
+    return normalized_points
+def straight_line_distance_meters(
+    start_latitude: float,
+    start_longitude: float,
+    destination_latitude: float,
+    destination_longitude: float,
+) -> int:
+    earth_radius_meters = 6371000
+
+    start_latitude_radians = math.radians(
+        start_latitude
+    )
+    destination_latitude_radians = math.radians(
+        destination_latitude
+    )
+
+    latitude_difference = math.radians(
+        destination_latitude
+        - start_latitude
+    )
+    longitude_difference = math.radians(
+        destination_longitude
+        - start_longitude
+    )
+
+    value = (
+        math.sin(latitude_difference / 2) ** 2
+        + math.cos(start_latitude_radians)
+        * math.cos(destination_latitude_radians)
+        * math.sin(longitude_difference / 2) ** 2
+    )
+
+    angle = 2 * math.atan2(
+        math.sqrt(value),
+        math.sqrt(1 - value),
+    )
+
+    return round(
+        earth_radius_meters * angle
+    )
+
+
+def search_restaurants_along_route(
+    route_points: list[dict],
+    max_search_points: int = 5,
+    radius_meters: int = 800,
+    page_size_per_point: int = 10,
+    keyword: str = "餐厅",
+) -> dict:
+    search_points = sample_route_points(
+        route_points=route_points,
+        max_points=max_search_points,
+    )
+
+    restaurants_by_id = {}
+
+    for point_index, point in enumerate(
+        search_points
+    ):
+        nearby_restaurants = (
+            search_nearby_restaurants(
+                latitude=point["latitude"],
+                longitude=point["longitude"],
+                radius_meters=radius_meters,
+                page_size=page_size_per_point,
+                keyword=keyword,
+            )
+        )
+
+        for restaurant in nearby_restaurants:
+            poi_id = restaurant.get("poi_id")
+
+            if not poi_id:
+                poi_id = (
+                    f'{restaurant["name"]}|'
+                    f'{restaurant["latitude"]}|'
+                    f'{restaurant["longitude"]}'
+                )
+
+            distance_to_sample = (
+                straight_line_distance_meters(
+                    start_latitude=(
+                        point["latitude"]
+                    ),
+                    start_longitude=(
+                        point["longitude"]
+                    ),
+                    destination_latitude=(
+                        restaurant["latitude"]
+                    ),
+                    destination_longitude=(
+                        restaurant["longitude"]
+                    ),
+                )
+            )
+
+            existing = restaurants_by_id.get(
+                poi_id
+            )
+
+            if (
+                existing is None
+                or distance_to_sample
+                < existing[
+                    "distance_to_route_sample_meters"
+                ]
+            ):
+                restaurant_result = dict(
+                    restaurant
+                )
+
+                restaurant_result[
+                    "route_sample_index"
+                ] = point_index
+
+                restaurant_result[
+                    "distance_to_route_sample_meters"
+                ] = distance_to_sample
+
+                restaurants_by_id[
+                    poi_id
+                ] = restaurant_result
+
+    restaurants = list(
+        restaurants_by_id.values()
+    )
+
+    restaurants.sort(
+        key=lambda item: item[
+            "distance_to_route_sample_meters"
+        ]
+    )
+
+    return {
+        "search_point_count": len(
+            search_points
+        ),
+        "search_points": search_points,
+        "restaurant_count": len(
+            restaurants
+        ),
+        "restaurants": restaurants,
     }

@@ -98,12 +98,31 @@ Page({
       data: {
         start_location:
           session.startLocation,
+      
         destination_location:
           session.destinationLocation,
-        restaurant_id:
-          session.restaurant.id,
+      
+        restaurant: {
+          id: String(
+            session.restaurant.id
+          ),
+          name:
+            session.restaurant.name,
+          address:
+            session.restaurant.address || "",
+          latitude: Number(
+            session.restaurant.latitude
+          ),
+          longitude: Number(
+            session.restaurant.longitude
+          ),
+          telephone:
+            session.restaurant.telephone || ""
+        },
+      
         travel_mode:
           session.travelMode,
+      
         original_duration_minutes:
           originalDuration
       },

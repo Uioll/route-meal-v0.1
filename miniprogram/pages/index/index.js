@@ -349,7 +349,7 @@ chooseLocation(locationType) {
     })
   
     wx.request({
-      url: "http://127.0.0.1:8000/lottery/draw",
+      url: "http://127.0.0.1:8000/lottery/real-draw",
       method: "POST",
   
       header: {
@@ -358,12 +358,15 @@ chooseLocation(locationType) {
   
       data: {
         text: intentText,
-        travel_mode: travelMode,
+        route_points:
+          selectedCommuteRoute.route.points,
         rejected_ids:
-          this.data.rejectedIds,
-        start_location: startLocation,
-        destination_location:
-          destinationLocation
+          this.data.rejectedIds.map(
+            restaurantId => String(restaurantId)
+          ),
+        max_search_points: 5,
+        radius_meters: 800,
+        page_size_per_point: 10
       },
   
       success: (response) => {

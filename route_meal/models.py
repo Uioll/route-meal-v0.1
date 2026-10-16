@@ -35,12 +35,13 @@ class DiningIntent:
 
 @dataclass
 class VisitRecord:
-    restaurant_id: int
+    restaurant_id: int | str
     restaurant_name: str
     visited_at: str
     personal_rating: float
     comment: str
     willing_to_return: bool
+    restaurant_address: str = ""
 
     def to_dict(self) -> dict:
         return asdict(self)

@@ -131,9 +131,16 @@ Page({
       },
 
       data: {
-        restaurant_id: this.data.restaurant.id,
+        restaurant_id: String(
+          this.data.restaurant.id
+        ),
+        restaurant_name:
+          this.data.restaurant.name,
+        restaurant_address:
+          this.data.restaurant.address || "",
         personal_rating: rating,
-        comment: this.data.visitComment.trim(),
+        comment:
+          this.data.visitComment.trim(),
         willing_to_return:
           this.data.willingToReturn
       },
